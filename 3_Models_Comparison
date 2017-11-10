@@ -1,0 +1,56 @@
+asmnt3<-read.csv("adult.csv",header=T)
+asmnt3$workclass[which(asmnt3$workclass=="?")]<-"Private"
+asmnt3$occupation[which(asmnt3$occupation=="?")]<-"Prof-specialty"
+asmnt3$native.country[which(asmnt3$native.country=="?")]<-"United-States"
+asmnt3$income<-as.factor(asmnt3$income)
+asmnt3$native.country<-as.numeric(asmnt3$native.country)
+asmnt3$workclass<-as.integer(asmnt3$workclass)
+asmnt3$education<-as.integer(asmnt3$education)
+asmnt3$marital.status<-as.integer(asmnt3$marital.status)
+asmnt3$occupation<-as.integer(asmnt3$occupation)
+asmnt3$relationship<-as.integer(asmnt3$relationship)
+asmnt3$race<-as.integer(asmnt3$race)
+asmnt3$sex<-as.integer(asmnt3$sex)
+asmnt3$native.country<-as.integer(asmnt3$native.country)
+
+asmnt3.sample<-sample.int(n=nrow(asmnt3),size = floor(.80*nrow(asmnt3)),replace = F)
+asmnt3.train<-asmnt3[asmnt3.sample,]
+asmnt3.test<-asmnt3[-asmnt3.sample,]
+
+#KNN Model
+asmnt3k.train<-asmnt3[asmnt3.sample,-15] 
+asmnt3k.train.lable<-asmnt3[asmnt3.sample,15]
+asmnt3k.test<-asmnt3[-asmnt3.sample,-15]
+asmnt3k.test.lable<-asmnt3[-asmnt3.sample,15]
+k<-31
+
+set.seed(74)
+asmnt3k.predict_label<-knn(train=asmnt3k.train,test=asmnt3k.test,cl=asmnt3k.train.lable,k)  
+confmat<-table(asmnt3k.test.lable,asmnt3k.predict_label)
+accuracy = (sum(diag(confmat))/sum(confmat))*100
+cat("Accuracy of KNN Model is ",accuracy,"\n")
+
+#Decision Tree
+set.seed(74)
+tree.model<- tree(income~.,data = asmnt3)
+model_prediction<-predict(tree.model,asmnt3.test)
+maxidx=function(arr){
+  return(which(arr==max(arr)))}
+idx=apply(model_prediction,c(1),maxidx)
+modelprediction<-c('No','Yes')[idx]
+confmat=table(modelprediction,asmnt3.test$income)
+accuracy <- (sum(diag(confmat))/sum(confmat))*100
+cat("Acurracy in Decision tree model is ",accuracy,"\n")
+
+#Naive Baye`s
+set.seed(74)
+model.navie<-naiveBayes(income~.,data=asmnt3)
+pred<-predict(model.navie,asmnt3.test[,-15])
+confmat<-table(pred,asmnt3.test$income)
+accuracy<-(sum(diag(confmat))/sum(confmat))*100
+cat("Acurracy in Navie Baye`s model is ",accuracy,"\n")
+
+# So, the Model Accuracy of the 3 Models are as:
+# KNN Model (k=31): 79.97%
+# Desicion Tree ( All Attributes): 83.54%
+# Naive Baye`s: 80.15%
